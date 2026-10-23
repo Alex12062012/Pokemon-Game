@@ -454,8 +454,7 @@ def fight():
         """, T=T)
     
     if request.method == "POST" and 'pokemon_idx' not in session:
-        # on retient la place du Pokémon dans toute la collection (pas dans la liste des disponibles)
-        session['pokemon_idx'] = state['collection'].index(available[int(request.form['pokemon_idx'])])
+        session['pokemon_idx'] = int(request.form['pokemon_idx'])
         session['boss_pokemon'] = random.choice(boss['pokemon'])
         stats = pokemon_stats[session['boss_pokemon']]
         session['boss_pv'] = stats['pv'] + (boss['niveau'] * 10)
@@ -492,7 +491,8 @@ def fight_action():
     T = LANGUES[lang]
     state = get_state()
     boss = bosses[state['boss_actuel']]
-    pokemon = state['collection'][session['pokemon_idx']]
+    available = [p for p in state['collection'] if p['pv'] > 0]
+    pokemon = available[session['pokemon_idx']]
     
     msg = ""
     if request.method == "POST":
@@ -578,7 +578,8 @@ def fight_result():
     T = LANGUES[lang]
     state = get_state()
     boss = bosses[state['boss_actuel']]
-    pokemon = state['collection'][session['pokemon_idx']]
+    available = [p for p in state['collection'] if p['pv'] > 0]
+    pokemon = available[session['pokemon_idx']]
     
     msg = ""
     is_victory = False
@@ -620,7 +621,7 @@ def fight_result():
     <body><div class="container">
         <h1>{% if is_victory %}🏆 {{T['victory']}}{% else %}💀 {{T['defeat']}}{% endif %}</h1>
         <p style="text-align:center;font-size:1.4em;margin:30px 0;">{{msg}}</p>
-        {% if is_victory and state['boss_actuel'] >= bosses|length %}
+        {% if is_victory and state['boss_actuel'] >= len(bosses) %}
         <p style="text-align:center;color:#667eea;font-weight:bold;font-size:1.3em;">🎊 Tous les boss sont vaincus !</p>
         {% endif %}
         <a href="{{url_for('menu')}}"><button class="btn">{{T['back']}}</button></a>
